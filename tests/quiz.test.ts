@@ -26,6 +26,13 @@ test("예시 파일이 검사를 통과한다", () => {
   assert.equal(parseQuizFile(text).ok, true);
 });
 
+test("형식 참고용 sample-questions.json이 검사를 통과한다", () => {
+  const text = readFileSync(new URL("../sample-questions.json", import.meta.url), "utf8");
+  const result = parseQuizFile(text);
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.quiz.questions.length, 10);
+});
+
 test("BOM이 붙은 파일도 읽는다", () => {
   assert.equal(parseQuizFile("\uFEFF" + JSON.stringify({ questions: [valid] })).ok, true);
 });
