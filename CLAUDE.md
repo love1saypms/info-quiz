@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트
 
-교육용 문제풀이 웹앱입니다. 이용자가 선생님께 받은 JSON 문제 파일을 올려 4지선다 문제를 모두 푼 뒤, 한 번에 채점받고 점수·문항별 정오·해설을 봅니다. Next.js 16(App Router)과 TypeScript로 만들고 Vercel에 배포합니다. 요구사항과 확정된 결정 사항은 `PRD.md`가 기준입니다.
+교육용 문제풀이 웹앱입니다. 학생이 `question-papers` 폴더에 준비된 문제지를 목록에서 골라 4지선다 문제를 모두 푼 뒤, 한 번에 채점받고 점수·문항별 정오·해설을 봅니다. Next.js 16(App Router)과 TypeScript로 만들고 Vercel에 배포합니다. 요구사항과 확정된 결정 사항은 `PRD.md`가 기준입니다.
 
 사용자는 개발을 모르는 일반인입니다. 아래 "사용자와 작업하는 규칙"이 기술 내용보다 우선합니다.
 
@@ -52,11 +52,13 @@ node --test --test-name-pattern="채점" "tests/**/*.test.ts"   # 테스트 하�
 
 ## 구조
 
-- `src/lib/quiz/` — 화면과 분리된 순수 로직. `types.ts`(Question/Quiz/Answers/GradeResult), `parse.ts`(파일 검증: 하나라도 잘못되면 전체 거부하고 "N번 문항: …" 형태의 쉬운 말 오류 목록 반환. 오류 메시지에는 영어 항목명(`options` 등)이나 기술용어를 넣지 않으며 테스트로 확인함, 추가 필드는 버림, 1MB·100문항 상수), `grade.ts`(점수 = round(정답 수 / 전체 × 100)).
-- `src/components/QuizApp.tsx` — 클라이언트 상태 머신(`upload → preview → solve → result`). 단계별 화면은 같은 폴더의 `*Step.tsx`. 상태는 메모리에만 있어 새로고침하면 처음부터 다시 시작합니다(PRD 결정 사항).
+- 문제지는 `question-papers/*.json`(최상위에 `title`, `questions`)입니다. 현재 버전은 학생이 이 폴더의 문제지를 목록에서 고르는 방식이며, 학생이 파일을 업로드하던 초기 버전은 없앴습니다(PRD.md 0장). 업로드 기능을 되살리지 않습니다.
+- `src/app/page.tsx`(서버 컴포넌트, `force-static`)가 빌드할 때 `loadQuestionPapers()`로 폴더를 읽어 `QuizApp`에 넘깁니다. 그래서 문제지를 추가·수정하면 다시 빌드해야 반영됩니다(개발 서버에서는 새로고침으로 반영). `papers.ts`의 `turbopackIgnore` 주석은 프로젝트 전체가 서버 파일에 실리는 경고를 막기 위한 것입니다.
+- `src/lib/quiz/` — 화면과 분리된 로직. `types.ts`(Quiz/PaperEntry 등), `parse.ts`(`parseQuestionPaper`: 제목·문항 검증. 하나라도 잘못되면 그 문제지 전체를 쓰지 않고 "N번 문항: …" 형태의 쉬운 말 오류 목록 반환. 오류 메시지에는 영어 항목명이나 기술용어를 넣지 않으며 테스트로 확인함, 추가 필드는 버림, 최대 100문항), `papers.ts`(폴더를 파일 이름 순서로 읽음. 잘못된 문제지도 목록에 안내로 남김. 서버 전용), `grade.ts`(점수 = round(정답 수 / 전체 × 100)).
+- `src/components/QuizApp.tsx` — 클라이언트 상태 머신(`list → preview → solve → result`). 단계별 화면은 같은 폴더의 `*Step.tsx`. 상태는 메모리에만 있어 새로고침하면 처음부터 다시 시작합니다(PRD 결정 사항).
 - `correctAnswer`는 1부터 시작하는 번호(`Choice = 1|2|3|4`)이므로 `options[correctAnswer - 1]`이 정답입니다.
-- 풀이 단계(`SolveStep`)에는 정답·점수·해설이 절대 드러나면 안 됩니다. 채점은 결과 단계로 넘어갈 때 한 번만 합니다.
-- `public/sample-quiz.json`은 내려받기용 예시이며 테스트에서도 검증합니다. 문항을 앱에 고정해 보여주는 용도로 쓰지 않습니다.
+- 풀이 단계(`SolveStep`)에는 정답·점수·해설이 절대 드러나면 안 됩니다. 채점은 결과 단계로 넘어갈 때 한 번만 합니다. 원본 접근 차단 같은 별도 정답 보호 기능은 요청 범위가 아니므로 넣지 않습니다.
+- 문제지의 문제·보기·정답·해설은 사용자 자료이므로 바꾸지 않습니다. 확인용으로 `question-papers`에 임의의 문제지를 추가하지 않고, 여러 문제지 동작은 테스트의 임시 폴더로 확인합니다.
 - 스타일은 `src/app/globals.css` 하나(CSS 변수 + 다크 모드, 480px 이하 모바일 대응). Tailwind나 CSS 모듈은 쓰지 않습니다.
 
 ## 테스트 관련 주의
@@ -67,6 +69,6 @@ node --test --test-name-pattern="채점" "tests/**/*.test.ts"   # 테스트 하�
 
 ## 범위와 현재 상태
 
-- 1일차 앱(업로드 → 문항 확인 → 풀이 → 채점·해설)은 로컬에서 동작을 확인했고 Git에 커밋했습니다. GitHub 업로드와 Vercel 배포, 실제 휴대폰 확인은 아직 하지 않았습니다.
+- 1일차 앱(문제지 목록 → 문항 확인 → 풀이 → 채점·해설)은 로컬에서 동작을 확인했습니다. GitHub 업로드와 Vercel 배포, 실제 휴대폰 확인은 아직 하지 않았습니다. 배포는 사용자가 따로 요청할 때만 합니다(Vercel이 연결되어 있어도 배포 도구를 실행하거나 임시 주소를 만들지 않음).
 - 1일차에는 로그인, AI 문제 생성, DB 저장을 넣지 않습니다. 2일차 기능을 대비해 로직은 `src/lib/quiz/`에 모아 두었지만 미리 구현하지 않습니다.
 - TypeScript는 Next.js 호환성 때문에 5.9.x로 고정했습니다(7.x로 올리지 않음).

@@ -2,35 +2,38 @@
 
 import { useEffect, useState } from "react";
 import { gradeQuiz } from "@/lib/quiz/grade";
-import type { Answers, GradeResult, Quiz } from "@/lib/quiz/types";
-import UploadStep from "./UploadStep";
+import type { Answers, GradeResult, PaperEntry, Quiz } from "@/lib/quiz/types";
+import PaperListStep from "./PaperListStep";
 import PreviewStep from "./PreviewStep";
 import SolveStep from "./SolveStep";
 import ResultStep from "./ResultStep";
 
 type State =
-  | { step: "upload" }
-  | { step: "preview"; quiz: Quiz; fileName: string }
-  | { step: "solve"; quiz: Quiz; fileName: string }
-  | { step: "result"; quiz: Quiz; fileName: string; answers: Answers; result: GradeResult };
+  | { step: "list" }
+  | { step: "preview"; quiz: Quiz }
+  | { step: "solve"; quiz: Quiz }
+  | { step: "result"; quiz: Quiz; answers: Answers; result: GradeResult };
 
-export default function QuizApp() {
-  const [state, setState] = useState<State>({ step: "upload" });
+type Props = {
+  papers: PaperEntry[];
+};
+
+export default function QuizApp({ papers }: Props) {
+  const [state, setState] = useState<State>({ step: "list" });
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [state.step]);
 
   switch (state.step) {
-    case "upload":
-      return <UploadStep onLoaded={(quiz, fileName) => setState({ step: "preview", quiz, fileName })} />;
+    case "list":
+      return <PaperListStep papers={papers} onSelect={(quiz) => setState({ step: "preview", quiz })} />;
     case "preview":
       return (
         <PreviewStep
           quiz={state.quiz}
-          fileName={state.fileName}
-          onStart={() => setState({ ...state, step: "solve" })}
-          onReset={() => setState({ step: "upload" })}
+          onStart={() => setState({ step: "solve", quiz: state.quiz })}
+          onBack={() => setState({ step: "list" })}
         />
       );
     case "solve":
@@ -38,7 +41,7 @@ export default function QuizApp() {
         <SolveStep
           quiz={state.quiz}
           onSubmit={(answers) =>
-            setState({ ...state, step: "result", answers, result: gradeQuiz(state.quiz.questions, answers) })
+            setState({ step: "result", quiz: state.quiz, answers, result: gradeQuiz(state.quiz.questions, answers) })
           }
         />
       );
@@ -47,8 +50,8 @@ export default function QuizApp() {
         <ResultStep
           quiz={state.quiz}
           result={state.result}
-          onRetry={() => setState({ step: "solve", quiz: state.quiz, fileName: state.fileName })}
-          onReset={() => setState({ step: "upload" })}
+          onRetry={() => setState({ step: "solve", quiz: state.quiz })}
+          onBack={() => setState({ step: "list" })}
         />
       );
   }

@@ -1,6 +1,5 @@
 import type { Choice, Question, Quiz } from "./types";
 
-export const MAX_FILE_BYTES = 1024 * 1024;
 export const MAX_QUESTIONS = 100;
 export const OPTION_COUNT = 4;
 
@@ -64,32 +63,36 @@ function validateQuestion(raw: unknown, no: number): { question?: Question; erro
   };
 }
 
-/** 문제 파일 내용(JSON 문자열)을 검사합니다. 하나라도 잘못되면 파일 전체를 거부합니다. */
-export function parseQuizFile(text: string): ParseResult {
+/** 문제지 파일 내용(JSON 문자열)을 검사합니다. 하나라도 잘못되면 문제지 전체를 쓰지 않습니다. */
+export function parseQuestionPaper(text: string): ParseResult {
   let data: unknown;
   try {
     data = JSON.parse(text.replace(/^\uFEFF/, ""));
   } catch {
     return {
       ok: false,
-      errors: ["파일 내용을 읽을 수 없습니다. 쉼표(,)나 따옴표(\")가 빠졌거나 잘못 들어갔을 수 있습니다. 선생님께 받은 문제 파일이 맞는지 확인해주세요."],
+      errors: ["문제지 파일 내용을 읽을 수 없습니다. 쉼표(,)나 따옴표(\")가 빠졌거나 잘못 들어갔을 수 있습니다."],
     };
   }
 
   if (!isRecord(data) || !Array.isArray(data.questions)) {
-    return { ok: false, errors: ["파일에서 문제 목록을 찾을 수 없습니다. 선생님께 받은 문제 파일이 맞는지 확인해주세요."] };
+    return { ok: false, errors: ["문제지 파일에서 문제 목록을 찾을 수 없습니다."] };
+  }
+
+  const errors: string[] = [];
+  if (!isNonEmptyString(data.title)) {
+    errors.push("문제지 제목이 없습니다.");
   }
 
   const rawQuestions = data.questions;
   if (rawQuestions.length === 0) {
-    return { ok: false, errors: ["파일에 문제가 하나도 없습니다."] };
+    return { ok: false, errors: [...errors, "문제지에 문제가 하나도 없습니다."] };
   }
   if (rawQuestions.length > MAX_QUESTIONS) {
-    return { ok: false, errors: [`문제는 최대 ${MAX_QUESTIONS}개까지 올릴 수 있습니다. 이 파일에는 ${rawQuestions.length}개가 있습니다.`] };
+    return { ok: false, errors: [...errors, `문제는 최대 ${MAX_QUESTIONS}개까지 넣을 수 있습니다. 이 문제지에는 ${rawQuestions.length}개가 있습니다.`] };
   }
 
   const questions: Question[] = [];
-  const errors: string[] = [];
   rawQuestions.forEach((raw, i) => {
     const result = validateQuestion(raw, i + 1);
     errors.push(...result.errors);
@@ -97,5 +100,5 @@ export function parseQuizFile(text: string): ParseResult {
   });
 
   if (errors.length > 0) return { ok: false, errors };
-  return { ok: true, quiz: { questions } };
+  return { ok: true, quiz: { title: (data.title as string).trim(), questions } };
 }

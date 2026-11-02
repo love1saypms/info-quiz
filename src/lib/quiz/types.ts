@@ -12,8 +12,14 @@ export type Question = {
 };
 
 export type Quiz = {
+  title: string;
   questions: Question[];
 };
+
+/** question-papers 폴더의 문제지 파일 하나. 형식이 잘못된 파일도 목록에 안내하기 위해 함께 담습니다. */
+export type PaperEntry =
+  | { fileName: string; ok: true; quiz: Quiz }
+  | { fileName: string; ok: false; errors: string[] };
 
 /** 문항 순서대로 이용자가 고른 보기. 아직 고르지 않았으면 null. */
 export type Answers = (Choice | null)[];

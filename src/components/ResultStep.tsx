@@ -5,14 +5,15 @@ type Props = {
   quiz: Quiz;
   result: GradeResult;
   onRetry: () => void;
-  onReset: () => void;
+  onBack: () => void;
 };
 
-export default function ResultStep({ quiz, result, onRetry, onReset }: Props) {
+export default function ResultStep({ quiz, result, onRetry, onBack }: Props) {
   return (
     <>
       <section className="card score-card">
         <h2>채점 결과</h2>
+        <p className="muted small">{quiz.title}</p>
         <p className="score">
           <strong>{result.score}</strong>점 <span className="muted">/ 100점</span>
         </p>
@@ -20,8 +21,8 @@ export default function ResultStep({ quiz, result, onRetry, onReset }: Props) {
           {result.total}문항 중 {result.correctCount}문항 정답
         </p>
         <div className="actions">
-          <button type="button" className="button secondary" onClick={onReset}>
-            새 파일 업로드
+          <button type="button" className="button secondary" onClick={onBack}>
+            문제지 목록으로
           </button>
           <button type="button" className="button primary" onClick={onRetry}>
             같은 문제 다시 풀기
