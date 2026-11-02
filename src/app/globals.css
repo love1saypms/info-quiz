@@ -149,32 +149,6 @@ button.paper-item:focus-visible {
 }
 
 /* 버튼 */
-.top-bar {
-  margin-bottom: 12px;
-}
-
-.home-button {
-  min-height: 44px;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.home-button:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.home-button:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
 .actions {
   display: flex;
   gap: 12px;

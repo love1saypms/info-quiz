@@ -43,7 +43,6 @@ export default function QuizApp({ papers }: Props) {
           onSubmit={(answers) =>
             setState({ step: "result", quiz: state.quiz, answers, result: gradeQuiz(state.quiz.questions, answers) })
           }
-          onHome={() => setState({ step: "list" })}
         />
       );
     case "result":
@@ -53,7 +52,6 @@ export default function QuizApp({ papers }: Props) {
           result={state.result}
           onRetry={() => setState({ step: "solve", quiz: state.quiz })}
           onBack={() => setState({ step: "list" })}
-          onHome={() => setState({ step: "list" })}
         />
       );
   }
