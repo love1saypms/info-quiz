@@ -29,16 +29,20 @@ test("올바른 문제지는 통과하고 추가 필드는 무시한다", () => 
   }
 });
 
-test("question-papers 폴더의 문제지를 제목과 함께 읽는다", () => {
+test("question-papers 폴더의 모든 문제지를 파일 내용 그대로 제목과 함께 읽는다", () => {
   const papers = loadQuestionPapers();
-  assert.equal(papers.length, 1);
-  const [paper] = papers;
-  assert.equal(paper.fileName, "sample-questions.json");
-  assert.equal(paper.ok, true);
-  if (paper.ok) {
-    const raw = JSON.parse(readFileSync(new URL("../question-papers/sample-questions.json", import.meta.url), "utf8"));
-    assert.equal(paper.quiz.title, "중학교 정보과목");
-    assert.equal(paper.quiz.questions.length, 10);
+  const expected: Record<string, [string, number]> = {
+    "high-school-questions.json": ["고등학교 정보과목", 10],
+    "sample-questions.json": ["중학교 정보과목", 10],
+  };
+  assert.deepEqual(papers.map((p) => p.fileName), Object.keys(expected));
+  for (const paper of papers) {
+    assert.equal(paper.ok, true, paper.fileName);
+    if (!paper.ok) continue;
+    const raw = JSON.parse(readFileSync(new URL(`../question-papers/${paper.fileName}`, import.meta.url), "utf8"));
+    const [title, count] = expected[paper.fileName];
+    assert.equal(paper.quiz.title, title);
+    assert.equal(paper.quiz.questions.length, count);
     assert.deepEqual(paper.quiz.questions, raw.questions);
   }
 });
