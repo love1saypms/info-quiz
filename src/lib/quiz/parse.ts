@@ -19,35 +19,35 @@ function isNonEmptyString(value: unknown): value is string {
 function validateQuestion(raw: unknown, no: number): { question?: Question; errors: string[] } {
   const prefix = `${no}번 문항`;
   if (!isRecord(raw)) {
-    return { errors: [`${prefix}: 문항은 { } 형태의 객체여야 합니다.`] };
+    return { errors: [`${prefix}: 문항을 읽을 수 없습니다. 문제 파일 형식을 확인해주세요.`] };
   }
 
   const errors: string[] = [];
 
   if (!isNonEmptyString(raw.question)) {
-    errors.push(`${prefix}: question(문제 내용)이 비어 있거나 문자열이 아닙니다.`);
+    errors.push(`${prefix}: 문제 내용이 비어 있습니다.`);
   }
 
   const options = raw.options;
   if (!Array.isArray(options)) {
-    errors.push(`${prefix}: options는 보기 ${OPTION_COUNT}개를 담은 배열이어야 합니다.`);
+    errors.push(`${prefix}: 보기가 없습니다. 보기는 ${OPTION_COUNT}개가 있어야 합니다.`);
   } else if (options.length !== OPTION_COUNT) {
-    errors.push(`${prefix}: options의 보기는 ${OPTION_COUNT}개여야 합니다. (현재 ${options.length}개)`);
+    errors.push(`${prefix}: 보기는 ${OPTION_COUNT}개가 있어야 하는데 ${options.length}개입니다.`);
   } else {
     options.forEach((option, i) => {
       if (!isNonEmptyString(option)) {
-        errors.push(`${prefix}: options의 ${i + 1}번째 보기가 비어 있거나 문자열이 아닙니다.`);
+        errors.push(`${prefix}: ${i + 1}번째 보기가 비어 있습니다.`);
       }
     });
   }
 
   const answer = raw.correctAnswer;
   if (typeof answer !== "number" || !Number.isInteger(answer) || answer < 1 || answer > OPTION_COUNT) {
-    errors.push(`${prefix}: correctAnswer는 1~${OPTION_COUNT} 사이의 숫자여야 합니다. (현재 ${JSON.stringify(answer) ?? "없음"})`);
+    errors.push(`${prefix}: 정답 번호는 1, 2, 3, 4 중 하나여야 합니다. (지금 적힌 값: ${answer === undefined ? "없음" : JSON.stringify(answer)})`);
   }
 
   if (!isNonEmptyString(raw.explanation)) {
-    errors.push(`${prefix}: explanation(해설)이 비어 있거나 문자열이 아닙니다.`);
+    errors.push(`${prefix}: 해설이 비어 있습니다.`);
   }
 
   if (errors.length > 0) return { errors };
@@ -68,22 +68,24 @@ function validateQuestion(raw: unknown, no: number): { question?: Question; erro
 export function parseQuizFile(text: string): ParseResult {
   let data: unknown;
   try {
-    data = JSON.parse(text.replace(/^﻿/, ""));
-  } catch (e) {
-    const detail = e instanceof Error ? ` (${e.message})` : "";
-    return { ok: false, errors: [`JSON 형식이 올바르지 않습니다.${detail}`] };
+    data = JSON.parse(text.replace(/^\uFEFF/, ""));
+  } catch {
+    return {
+      ok: false,
+      errors: ["파일 내용을 읽을 수 없습니다. 쉼표(,)나 따옴표(\")가 빠졌거나 잘못 들어갔을 수 있습니다. 선생님께 받은 문제 파일이 맞는지 확인해주세요."],
+    };
   }
 
   if (!isRecord(data) || !Array.isArray(data.questions)) {
-    return { ok: false, errors: ["파일 최상위에 questions 배열이 있어야 합니다. 예: { \"questions\": [ ... ] }"] };
+    return { ok: false, errors: ["파일에서 문제 목록을 찾을 수 없습니다. 선생님께 받은 문제 파일이 맞는지 확인해주세요."] };
   }
 
   const rawQuestions = data.questions;
   if (rawQuestions.length === 0) {
-    return { ok: false, errors: ["questions 배열에 문항이 없습니다."] };
+    return { ok: false, errors: ["파일에 문제가 하나도 없습니다."] };
   }
   if (rawQuestions.length > MAX_QUESTIONS) {
-    return { ok: false, errors: [`문항은 최대 ${MAX_QUESTIONS}개까지 올릴 수 있습니다. (현재 ${rawQuestions.length}개)`] };
+    return { ok: false, errors: [`문제는 최대 ${MAX_QUESTIONS}개까지 올릴 수 있습니다. 이 파일에는 ${rawQuestions.length}개가 있습니다.`] };
   }
 
   const questions: Question[] = [];

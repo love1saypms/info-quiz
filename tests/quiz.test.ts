@@ -27,23 +27,23 @@ test("예시 파일이 검사를 통과한다", () => {
 });
 
 test("BOM이 붙은 파일도 읽는다", () => {
-  assert.equal(parseQuizFile("﻿" + JSON.stringify({ questions: [valid] })).ok, true);
+  assert.equal(parseQuizFile("\uFEFF" + JSON.stringify({ questions: [valid] })).ok, true);
 });
 
 test("잘못된 파일은 전체를 거부하고 문항 번호를 알려준다", () => {
   const cases: [unknown, RegExp][] = [
-    [{ questions: [] }, /문항이 없습니다/],
-    [{ items: [valid] }, /questions 배열/],
-    [[valid], /questions 배열/],
-    [{ questions: [valid, { ...valid, options: ["a", "b", "c"] }] }, /2번 문항: options의 보기는 4개.*현재 3개/],
-    [{ questions: [{ ...valid, correctAnswer: 5 }] }, /1번 문항: correctAnswer/],
-    [{ questions: [{ ...valid, correctAnswer: 0 }] }, /correctAnswer/],
-    [{ questions: [{ ...valid, correctAnswer: "2" }] }, /correctAnswer/],
-    [{ questions: [{ ...valid, correctAnswer: 1.5 }] }, /correctAnswer/],
-    [{ questions: [{ ...valid, question: "  " }] }, /question/],
-    [{ questions: [{ ...valid, explanation: undefined }] }, /explanation/],
-    [{ questions: [{ ...valid, options: ["a", "", "c", "d"] }] }, /2번째 보기/],
-    [{ questions: Array(MAX_QUESTIONS + 1).fill(valid) }, /최대 100개/],
+    [{ questions: [] }, /문제가 하나도 없습니다/],
+    [{ items: [valid] }, /문제 목록을 찾을 수 없습니다/],
+    [[valid], /문제 목록을 찾을 수 없습니다/],
+    [{ questions: [valid, { ...valid, options: ["a", "b", "c"] }] }, /2번 문항: 보기는 4개가 있어야 하는데 3개입니다/],
+    [{ questions: [{ ...valid, correctAnswer: 5 }] }, /1번 문항: 정답 번호는 1, 2, 3, 4 중 하나.*지금 적힌 값: 5/],
+    [{ questions: [{ ...valid, correctAnswer: 0 }] }, /정답 번호/],
+    [{ questions: [{ ...valid, correctAnswer: "2" }] }, /정답 번호/],
+    [{ questions: [{ ...valid, correctAnswer: 1.5 }] }, /정답 번호/],
+    [{ questions: [{ ...valid, question: "  " }] }, /문제 내용이 비어/],
+    [{ questions: [{ ...valid, explanation: undefined }] }, /해설이 비어/],
+    [{ questions: [{ ...valid, options: ["a", "", "c", "d"] }] }, /2번째 보기가 비어/],
+    [{ questions: Array(MAX_QUESTIONS + 1).fill(valid) }, /최대 100개.*101개/],
   ];
   for (const [data, pattern] of cases) {
     const result = parse(data);
@@ -52,10 +52,18 @@ test("잘못된 파일은 전체를 거부하고 문항 번호를 알려준다",
   }
 });
 
+test("오류 메시지에 영어 항목명이나 기술용어를 쓰지 않는다", () => {
+  const bad = { questions: [{ question: "", options: ["a"], correctAnswer: "x", explanation: "" }, 1] };
+  const messages = [parse(bad), parse({}), parseQuizFile("{")]
+    .flatMap((r) => (r.ok ? [] : r.errors))
+    .join(" ");
+  assert.doesNotMatch(messages, /question|options|correctAnswer|explanation|JSON|배열|객체|문자열/);
+});
+
 test("JSON 문법 오류를 알려준다", () => {
   const result = parseQuizFile("{ questions: ");
   assert.equal(result.ok, false);
-  if (!result.ok) assert.match(result.errors[0], /JSON 형식/);
+  if (!result.ok) assert.match(result.errors[0], /파일 내용을 읽을 수 없습니다/);
 });
 
 test("정답 수 ÷ 전체 문항 수 × 100을 반올림한 정수로 채점한다", () => {
