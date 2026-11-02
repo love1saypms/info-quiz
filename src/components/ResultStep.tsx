@@ -6,11 +6,17 @@ type Props = {
   result: GradeResult;
   onRetry: () => void;
   onBack: () => void;
+  onHome: () => void;
 };
 
-export default function ResultStep({ quiz, result, onRetry, onBack }: Props) {
+export default function ResultStep({ quiz, result, onRetry, onBack, onHome }: Props) {
   return (
     <>
+      <div className="top-bar">
+        <button type="button" className="home-button" onClick={onHome}>
+          ← 홈으로 돌아가기
+        </button>
+      </div>
       <section className="card score-card">
         <h2>채점 결과</h2>
         <p className="muted small">{quiz.title}</p>
