@@ -117,17 +117,21 @@ h2 {
   text-align: left;
 }
 
-button.paper-item {
+button.paper-item,
+a.paper-item {
   cursor: pointer;
   min-height: 56px;
+  text-decoration: none;
 }
 
-button.paper-item:hover {
+button.paper-item:hover,
+a.paper-item:hover {
   border-color: var(--primary);
   background: var(--primary-soft);
 }
 
-button.paper-item:focus-visible {
+button.paper-item:focus-visible,
+a.paper-item:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
@@ -185,6 +189,65 @@ button.paper-item:focus-visible {
 .button:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* 화면 위쪽 제목과 "첫 화면으로" 버튼 */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.top-bar .app-title {
+  margin-bottom: 0;
+}
+
+.top-bar-button {
+  flex: none;
+  min-height: 40px;
+  font-size: 0.875rem;
+}
+
+/* 학생 이름 입력 */
+.field-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.text-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.text-input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.text-input[aria-invalid="true"] {
+  border-color: var(--wrong);
+}
+
+.field-error {
+  color: var(--wrong);
+  font-size: 0.875rem;
+  margin: 6px 0 0;
 }
 
 /* 문항 확인 */
