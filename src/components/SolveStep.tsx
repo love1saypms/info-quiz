@@ -1,15 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Answers, Choice, Quiz } from "@/lib/quiz/types";
+import type { Answers, Choice, PublicQuiz } from "@/lib/quiz/types";
 import { OPTION_MARKS } from "./optionMarks";
 
 type Props = {
-  quiz: Quiz;
+  /** 정답·해설이 없는 문제지. 채점은 제출한 뒤 서버에서 합니다. */
+  quiz: PublicQuiz;
   onSubmit: (answers: Answers) => void;
+  /** 제출(채점·저장) 중이면 true */
+  submitting?: boolean;
+  /** 제출에 실패했을 때 보여줄 안내. 고른 답은 그대로 남아 다시 제출할 수 있습니다. */
+  submitError?: string;
 };
 
-export default function SolveStep({ quiz, onSubmit }: Props) {
+export default function SolveStep({ quiz, onSubmit, submitting = false, submitError = "" }: Props) {
   const total = quiz.questions.length;
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>(() => Array(total).fill(null));
@@ -68,7 +73,7 @@ export default function SolveStep({ quiz, onSubmit }: Props) {
           type="button"
           className="button secondary"
           onClick={() => setIndex(index - 1)}
-          disabled={index === 0}
+          disabled={index === 0 || submitting}
         >
           이전
         </button>
@@ -77,9 +82,9 @@ export default function SolveStep({ quiz, onSubmit }: Props) {
             type="button"
             className="button primary"
             onClick={() => onSubmit(answers)}
-            disabled={!allAnswered}
+            disabled={!allAnswered || submitting}
           >
-            채점하기
+            {submitting ? "채점하는 중…" : submitError ? "다시 시도" : "채점하기"}
           </button>
         ) : (
           <button
@@ -92,6 +97,11 @@ export default function SolveStep({ quiz, onSubmit }: Props) {
           </button>
         )}
       </div>
+      {submitError && (
+        <p className="field-error center" role="alert">
+          {submitError} 고른 답은 그대로 남아 있습니다.
+        </p>
+      )}
       {selected === null && <p className="small muted center">보기를 하나 고르면 다음으로 넘어갈 수 있습니다.</p>}
     </section>
   );

@@ -1,7 +1,7 @@
-import type { Quiz } from "@/lib/quiz/types";
+import type { PublicQuiz } from "@/lib/quiz/types";
 
 type Props = {
-  quiz: Quiz;
+  quiz: PublicQuiz;
   onStart: () => void;
   onBack: () => void;
 };

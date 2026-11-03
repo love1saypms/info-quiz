@@ -9,3 +9,13 @@ npm-debug.log*
 
 .vercel
 .env*
+
+# 서버용 Firebase 비밀키 (절대 GitHub에 올리지 않음)
+.secrets/
+
+# Firebase 명령 도구 기록 파일
+firebase-debug.log
+firestore-debug.log
+
+# 시험용 PDF (GitHub에 올리지 않음)
+test-pdfs/

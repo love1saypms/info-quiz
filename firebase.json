@@ -1,0 +1,14 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "문제풀이",
+        "supportEmail": "love1saypms@gmail.com",
+        "authorizedRedirectUris": ["http://localhost:3000"]
+      }
+    }
+  }
+}

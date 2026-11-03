@@ -16,6 +16,22 @@ export type Quiz = {
   questions: Question[];
 };
 
+/** 학생이 푸는 동안 받는 문항. 정답과 해설은 들어 있지 않습니다. */
+export type PublicQuestion = Pick<Question, "question" | "options">;
+
+/** 학생이 푸는 동안 받는 문제지. 정답과 해설은 채점한 뒤에만 받습니다. */
+export type PublicQuiz = {
+  title: string;
+  questions: PublicQuestion[];
+};
+
+/** 학생 목록에 보이는 공개 문제지 한 개 */
+export type PaperSummary = {
+  id: string;
+  title: string;
+  questionCount: number;
+};
+
 /** question-papers 폴더의 문제지 파일 하나. 형식이 잘못된 파일도 목록에 안내하기 위해 함께 담습니다. */
 export type PaperEntry =
   | { fileName: string; ok: true; quiz: Quiz }

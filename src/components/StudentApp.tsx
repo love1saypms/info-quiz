@@ -2,28 +2,26 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import type { PaperEntry } from "@/lib/quiz/types";
+import { MAX_NAME_LENGTH, checkStudentName } from "@/lib/quiz/records";
 import QuizApp from "./QuizApp";
 
-type Props = {
-  papers: PaperEntry[];
-};
-
-// 학생은 이름만 입력하고 들어갑니다. 이름은 저장하지 않으므로 새로고침하면 다시 입력합니다.
-export default function StudentApp({ papers }: Props) {
+// 학생은 이름만 입력하고 들어갑니다. 이름은 최종 제출할 때 결과와 함께 저장되고,
+// 화면에서는 기억하지 않으므로 새로고침하면 다시 입력합니다.
+export default function StudentApp() {
   const [name, setName] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const trimmed = draft.trim();
-    if (!trimmed) {
-      setError("이름을 입력해 주세요.");
+    // 서버가 저장할 때와 같은 규칙으로 이름을 정리합니다.
+    const check = checkStudentName(draft);
+    if (!check.ok) {
+      setError(check.error);
       return;
     }
     setError("");
-    setName(trimmed);
+    setName(check.name);
   }
 
   return (
@@ -36,7 +34,7 @@ export default function StudentApp({ papers }: Props) {
       </div>
 
       {name ? (
-        <QuizApp papers={papers} />
+        <QuizApp studentName={name} />
       ) : (
         <section className="card">
           <h2>이름을 입력하세요</h2>
@@ -49,7 +47,7 @@ export default function StudentApp({ papers }: Props) {
               className="text-input"
               type="text"
               value={draft}
-              maxLength={20}
+              maxLength={MAX_NAME_LENGTH}
               autoComplete="off"
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "student-name-error" : undefined}
